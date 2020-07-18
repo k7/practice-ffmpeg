@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <variant>
 #include <vector>
 
 struct Header {
@@ -639,11 +638,24 @@ struct GifDataStream {
     }
 };
 
-int main() {
-    std::ifstream input("/tmp/big.gif", std::ios::binary);
+int main(int argc, char *argv[]) {
+
+    if (argc <= 1) {
+        std::cout << "Usage: gif_parser <gif file>" << std::endl;
+        return 0;
+    }
+
+    std::string file(argv[1]);
+
+    std::ifstream input(file, std::ios::binary);
 
     if (!input) {
-        std::cout << "no valid input file" << std::endl;
+        std::cout << "file is not exists: " << file << std::endl;
+        return -1;
+    }
+
+    if (input.peek() != 'G') {
+        std::cout << "it is not a gif file: " << file << std::endl;
         return -1;
     }
 

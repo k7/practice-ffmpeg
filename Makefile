@@ -9,7 +9,7 @@ LDFLAGS =
 % : src/%.cc
 	mkdir -p $(PWD)/build
 	$(CC) $(DEBUG) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o build/$@ $^
-	build/$@
+	build/$@ data/demo.gif
 
 .PHONY : clean
 clean:
