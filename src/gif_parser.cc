@@ -417,7 +417,7 @@ std::ostream &operator<<(std::ostream &os, const ApplicationExtension &d) {
        << "  blockSize=" << +d.blockSize << ",\n"
        << "  applicationIdentifier=" << d.applicationIdentifier << ",\n"
        << "  applAuthenticationCode=" << d.applAuthenticationCode << ",\n"
-       << "  ApplicationData=(size=" << d.applicationData.size() << ",\n"
+       << "  ApplicationData=(size=" << d.applicationData.size() << "),\n"
        << ")";
     return os;
 }
