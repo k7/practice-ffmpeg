@@ -11,9 +11,10 @@ inline uint32_t swap_endian(uint32_t a) {
 struct BoxHeader {
     uint32_t size;
     std::string type;
+    std::string parent_type;
     int beginPosition;
     int endPosition;
-    BoxHeader(std::istream &input) {
+    BoxHeader(std::istream &input, std::string parent) : parent_type(parent) {
         beginPosition = static_cast<int>(input.tellg()) + 1;
 
         input.read(reinterpret_cast<char *>(&size), sizeof(size));
@@ -29,8 +30,12 @@ struct BoxHeader {
 
 std::ostream &operator<<(std::ostream &os, const BoxHeader &b) {
     os << "BoxHeader("
-       << "position=[" << b.beginPosition << "," << b.endPosition << "],"
-       << "size=" << +b.size << ", type=" << b.type << ")";
+       << "type=" << b.type            //
+       << ", parent=" << b.parent_type //
+       << ", size="
+       << +b.size //
+       //    << ", position=[" << b.beginPosition << "," << b.endPosition << "]"
+       << ")";
     return os;
 }
 
@@ -39,20 +44,22 @@ struct Box {
     int beginPosition;
     int endPosition;
     std::vector<Box> sub_boxes;
-    int level = 0;
-    Box(BoxHeader h, int le = 0) : header(h), level(le) {
+    Box(BoxHeader h) : header(h) {
         beginPosition = h.beginPosition;
         endPosition = h.endPosition;
     }
 
-    Box(BoxHeader h, std::istream &input, int le = 0) : Box(h, le) {
+    Box(BoxHeader h, std::istream &input) : Box(h) {
         beginPosition = h.beginPosition;
         endPosition = beginPosition + h.size - 1;
-        if (h.type == "moov" || h.type == "trak" || h.type == "mdia" ||
-            h.type == "minf" || h.type == "stbl") {
-            while (input.good() && h.size > endPosition - beginPosition) {
-                BoxHeader boxHeader(input);
-                Box box(boxHeader, input, level + 1);
+
+        // 这些是纯容器，不包含字段的
+        if (h.type == "moov" || h.type == "trak"                        //
+            || h.type == "mdia" || h.type == "minf" || h.type == "stbl" //
+            || h.type == "udta" || h.type == "edts") {
+            while (input.good() && endPosition - beginPosition < h.size) {
+                BoxHeader boxHeader(input, h.type);
+                Box box(boxHeader, input);
                 sub_boxes.push_back(box);
                 input.peek(); // triggered ios state check
             }
@@ -63,18 +70,14 @@ struct Box {
 };
 
 std::ostream &operator<<(std::ostream &os, const Box &b) {
-    std::string prefix(b.level * 2, ' ');
-    os << prefix;
+
     os << "Box("                                                           //
-       << "position=[" << b.beginPosition << "," << b.endPosition << "], " //
-       << b.header;                                                        //
+       << b.header                                                         //
+       << ", position=[" << b.beginPosition << "," << b.endPosition << "]" //
+       << ")" << std::endl;
     for (const auto &s : b.sub_boxes) {
-        os << prefix << std::endl << s;
+        os << s;
     }
-    if (b.sub_boxes.size() > 0) {
-        os << std::endl << prefix;
-    }
-    os << ")";
     return os;
 }
 
@@ -95,9 +98,9 @@ int main(int argc, char *argv[]) {
     }
 
     while (input.good()) {
-        BoxHeader boxHeader(input);
+        BoxHeader boxHeader(input, "root");
         Box box(boxHeader, input);
-        std::cout << box << std::endl;
+        std::cout << box;
         input.peek(); // triggered ios state check
     }
 
