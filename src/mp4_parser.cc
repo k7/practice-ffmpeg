@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -43,7 +44,7 @@ struct Box {
     BoxHeader header;
     int beginPosition;
     int endPosition;
-    std::vector<Box> sub_boxes;
+    std::vector<std::shared_ptr<Box>> sub_boxes;
     Box(BoxHeader h) : header(h) {
         beginPosition = h.beginPosition;
         endPosition = h.endPosition;
@@ -59,7 +60,7 @@ struct Box {
             || h.type == "udta" || h.type == "edts") {
             while (input.good() && endPosition - beginPosition < h.size) {
                 BoxHeader boxHeader(input, h.type);
-                Box box(boxHeader, input);
+                auto box = std::make_shared<Box>(boxHeader, input);
                 sub_boxes.push_back(box);
                 input.peek(); // triggered ios state check
             }
@@ -76,7 +77,7 @@ std::ostream &operator<<(std::ostream &os, const Box &b) {
        << ", position=[" << b.beginPosition << "," << b.endPosition << "]" //
        << ")" << std::endl;
     for (const auto &s : b.sub_boxes) {
-        os << s;
+        os << *s;
     }
     return os;
 }
