@@ -6,10 +6,15 @@ LDFLAGS =
 
 .SUFFIXES: .cc .o
 
-% : src/%.cc
+gif_parser : src/gif_parser.cc
 	mkdir -p $(PWD)/build
 	$(CC) $(DEBUG) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o build/$@ $^
 	build/$@ data/demo.gif
+
+mp4_parser : src/mp4_parser.cc
+	mkdir -p $(PWD)/build
+	$(CC) $(DEBUG) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o build/$@ $^
+	build/$@ data/demo.mp4
 
 .PHONY : clean
 clean:
