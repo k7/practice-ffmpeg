@@ -44,7 +44,7 @@ struct Box {
     BoxHeader header;
     int beginPosition;
     int endPosition;
-    std::vector<std::shared_ptr<Box>> sub_boxes;
+    std::vector<std::unique_ptr<Box>> sub_boxes;
     Box(BoxHeader h) : header(h) {
         beginPosition = h.beginPosition;
         endPosition = h.endPosition;
@@ -60,8 +60,8 @@ struct Box {
             || h.type == "udta" || h.type == "edts") {
             while (input.good() && endPosition - beginPosition < h.size) {
                 BoxHeader boxHeader(input, h.type);
-                auto box = std::make_shared<Box>(boxHeader, input);
-                sub_boxes.push_back(box);
+                auto box = std::make_unique<Box>(boxHeader, input);
+                sub_boxes.push_back(std::move(box));
                 input.peek(); // triggered ios state check
             }
         } else {
